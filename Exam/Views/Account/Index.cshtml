@@ -1,0 +1,13 @@
+﻿@page
+
+@{
+
+}
+@model IEnumerable<User>
+
+@foreach (var item in Model)
+{
+    <h1>@item.Name</h1>
+    <h1>@item.Surname</h1>
+    <h1>@item.Email</h1>
+}
