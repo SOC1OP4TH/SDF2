@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Exam.DAL
 {
-    public class AppDbContext : IdentityDbContext
+    public class ApplicationDbContext : IdentityDbContext
     {
-        public AppDbContext(DbContextOptions options) : base(options)
+        public ApplicationDbContext(DbContextOptions options) : base(options)
         {
         }
 

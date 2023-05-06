@@ -1,6 +1,7 @@
 ﻿using Exam.DAL;
 using Exam.Models;
 using Exam.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Internal;
@@ -11,25 +12,68 @@ namespace Exam.Controllers
     {
         UserManager<User> _userManager;
         SignInManager<User> _signInManager;
-        AppDbContext _db;
+        ApplicationDbContext _db;
         
-        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager, AppDbContext appDbContext)
+        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager, ApplicationDbContext appDbContext)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _db = appDbContext;
         }
-
+        
         public IActionResult Index()
         {
-            return View(_db.Users);
+            return View(_db.Users.ToList());
+        }
+
+        public IActionResult Register()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Register(RegisterVM registerVM)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(registerVM);
+            }
+            var ExsistUser = await _userManager.FindByNameAsync(registerVM.UserName);
+
+            if (ExsistUser != null)
+            {
+                ModelState.AddModelError("UserName", "This UserName is exsist");
+                return View();
+            }
+
+            User user = new User()
+            {
+                UserName = registerVM.UserName,
+                Name = registerVM.Name,
+                Surname = registerVM.Surname,
+                Email = registerVM.Email,
+            };
+
+            var res = await _userManager.CreateAsync(user, registerVM.Password);
+            if (!res.Succeeded)
+            {
+                foreach (var item in res.Errors)
+                {
+                    ModelState.AddModelError("", item.Description);
+                }
+
+                return View();
+            }
+
+            await _signInManager.SignInAsync(user, true);
+            return RedirectToAction(nameof(Index), "Account");
         }
 
         public IActionResult Login()
         {
             return View();
         }
-
+        
         [HttpPost]
         public async Task<IActionResult> Login(LoginVM loginVM)
         {
@@ -54,53 +98,12 @@ namespace Exam.Controllers
             return RedirectToAction("Index", "Account");
         }
 
-        public IActionResult Register()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Register(RegisterVM registerVM)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(registerVM);
-            }
-            User ExsistUser = await _userManager.FindByNameAsync(registerVM.UserName);
-
-            if (ExsistUser != null)
-            {
-                ModelState.AddModelError("UserName", "This UserName is exsist");
-                return View();
-            }
-
-            User user = new User()
-            {
-                UserName = registerVM.UserName,
-                Name = registerVM.Name,
-                Surname = registerVM.Surname,
-                Email = registerVM.Email,
-            };
-
-            var res = await _userManager.CreateAsync(user, registerVM.Password);
-            if (!res.Succeeded)
-            {
-                foreach (var item in res.Errors)
-                {
-                    ModelState.AddModelError("", item.Description);
-                }
-                
-                return View();
-            }
-
-            await _signInManager.SignInAsync(user, true);
-            return View();
-        }
-
         public async Task<IActionResult> LogOut()
         {
             await _signInManager.SignOutAsync();
-            return RedirectToAction(nameof(Index), "Home");
+            return RedirectToAction(nameof(Index), "Account");
         }
+
+
     }
 }

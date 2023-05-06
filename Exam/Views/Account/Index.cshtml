@@ -1,13 +1,25 @@
-﻿@page
+﻿
 
 @{
 
 }
-@model IEnumerable<User>
 
-@foreach (var item in Model)
+@model List<Exam.Models.User>
+@if (Model!=null)
 {
-    <h1>@item.Name</h1>
-    <h1>@item.Surname</h1>
-    <h1>@item.Email</h1>
+    @foreach (var item in Model)
+    {
+        <table>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+            </tr>
+            <tr>
+                <td>@item.UserName</td>
+                <td>@item.Email</td>
+            </tr>
+
+        </table>
+
+    }
 }
